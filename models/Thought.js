@@ -11,6 +11,9 @@ const thoughtSchema = new mongoose.Schema({
     createdAt: {
         type: Date,
         default: Date.now,
+        get: (timestamp) => {
+            return new Date(timestamp).toLocaleString();
+        },
     },
     username: {
         type: String,
