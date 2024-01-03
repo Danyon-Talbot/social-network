@@ -26,6 +26,15 @@ thoughtSchema.virtual('reactionCount').get(function () {
     return this.reactions.length;
 });
 
+thoughtSchema.set('toJSON', {
+    transform: function (doc, ret) {
+      ret.id = ret._id;
+      delete ret._id;
+      delete ret.__v;
+    },
+  });
+  
+
 const Thought = mongoose.model('Thought', thoughtSchema);
 
 module.exports = Thought;
