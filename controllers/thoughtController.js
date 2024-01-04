@@ -1,4 +1,5 @@
-const { Thought, User } = require('../models');
+const Thought = require('../models/Thought');
+const User = require('../models/User');
 
 module.exports = {
   // GET all thoughts
@@ -29,15 +30,18 @@ module.exports = {
   // POST to create a new thought and push thought _id to the associated user's thoughts array field
   async createThought(req, res) {
     try {
-      const thought = await Thought.create(req.body);
-
+      const { thoughtText, username } = req.body;
+  
+      // Create a new thought
+      const thought = await Thought.create({ thoughtText, username });
+  
       // Update the associated user's thoughts array
       await User.findByIdAndUpdate(
         thought.username,
         { $push: { thoughts: thought._id } },
         { new: true }
       );
-
+  
       res.json(thought);
     } catch (err) {
       res.status(500).json({ error: 'Server error' });
@@ -79,4 +83,28 @@ module.exports = {
       res.status(500).json({ error: 'Server error' });
     }
   },
-};
+
+    async createReaction(req, res) {
+        try {
+        const { reactionBody, username } = req.body;
+    
+        // Create a new reaction
+        const reaction = await Reaction.create({ reactionBody, username });
+    
+        // Find the thought by its thoughtId and push the reaction to its reactions array
+        const thought = await Thought.findByIdAndUpdate(
+            req.params.thoughtId,
+            { $push: { reactions: reaction._id } },
+            { new: true }
+        );
+    
+        if (!thought) {
+            return res.status(404).json({ message: 'No thought with that ID' });
+        }
+    
+        res.json(reaction);
+        } catch (err) {
+        res.status(500).json({ error: 'Server error' });
+        }
+    }
+}

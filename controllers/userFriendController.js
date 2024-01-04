@@ -1,4 +1,4 @@
-const { User } = require('../models');
+const { User } = require('../models/User');
 
 module.exports = {
   // POST a friend to a User's friend list
