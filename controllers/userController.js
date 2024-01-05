@@ -1,4 +1,4 @@
-const { User } = require('../models/User');
+const User = require('../models/User');
 
 
 module.exports = {
@@ -30,12 +30,13 @@ module.exports = {
     // Creates new User
     async createUser(req, res) {
         try {
-            const user = await User.create(req.body);
-            res.json(user);
+          const { username, email } = req.body;
+          const user = await User.create({ username, email });
+          res.json(user);
         } catch (err) {
-            res.status(500).json(err);
+          res.status(500).json(err);
         }
-    },
+      },
 
     // Updates User by ID
     async updateUser(req, res) {

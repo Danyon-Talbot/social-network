@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const reactionSchema = require('./Reaction');
 
 const thoughtSchema = new mongoose.Schema({
-    thoughtTest: {
+    thoughtText: {
         type: String,
         required: true,
         minlength: 1,
