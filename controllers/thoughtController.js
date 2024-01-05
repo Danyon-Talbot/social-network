@@ -1,6 +1,5 @@
 const Thought = require('../models/Thought');
 const User = require('../models/User');
-const mongoose = require('mongoose');
 
 module.exports = {
   // GET all thoughts
@@ -31,14 +30,14 @@ module.exports = {
   // POST to create a new thought and push thought _id to the associated user's thoughts array field
   async createThought(req, res) {
     try {
-      const { thoughtText, username } = req.body;
+      const { thoughtText, username, userId } = req.body;
   
-      if (!thoughtText || !username) {
-        return res.status(400).json({ error: 'Invalid request data. Make sure you provide both thoughtText and username.' });
+      if (!thoughtText || !username || !userId) {
+        return res.status(400).json({ error: 'Invalid request data. Make sure you provide thoughtText, username, and userId.' });
       }
   
-      // Create a new thought
-      const thought = await Thought.create({ thoughtText, username });
+      // Create a new thought with userId
+      const thought = await Thought.create({ thoughtText, username, userId });
   
       if (!thought) {
         return res.status(500).json({ error: 'Failed to create thought' });
@@ -46,13 +45,14 @@ module.exports = {
   
       // Update the associated user's thoughts array
       const updatedUser = await User.findOneAndUpdate(
-        { username }, // Use the username as a filter to find the user
+        { username, _id: userId }, // Ensure you are using _id for userId
         { $push: { thoughts: thought._id } },
         { new: true }
       );
   
       if (!updatedUser) {
-        return res.status(500).json({ error: 'Failed to update user' });
+        console.error(`User not found: username=${username}, userId=${userId}`);
+        return res.status(404).json({ error: 'User not found' });
       }
   
       res.json(thought);
@@ -99,27 +99,55 @@ module.exports = {
     }
   },
 
-    async createReaction(req, res) {
-        try {
-        const { reactionBody, username } = req.body;
-    
-        // Create a new reaction
-        const reaction = await Reaction.create({ reactionBody, username });
-    
-        // Find the thought by its thoughtId and push the reaction to its reactions array
-        const thought = await Thought.findByIdAndUpdate(
-            req.params.thoughtId,
-            { $push: { reactions: reaction._id } },
+  async createReaction(req, res) {
+    try {
+      const { reactionBody, username, userId } = req.body;
+  
+      // Create a new reaction object
+      const newReaction = {
+        reactionBody,
+        username,
+      };
+  
+      // Find the thought by its thoughtId and push the new reaction
+      const thought = await Thought.findByIdAndUpdate(
+        req.params.thoughtId,
+        { $push: { reactions: newReaction } },
+        { new: true }
+      );
+  
+      if (!thought) {
+        return res.status(404).json({ message: 'No thought with that ID' });
+      }
+  
+      res.json(newReaction);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Server error' });
+    }
+  },
+
+  async deleteReaction(req, res) {
+    try {
+        const thoughtId = req.params.thoughtId;
+        const reactionId = req.params.reactionId;
+
+        // Find the thought by its thoughtId and remove the reaction by its reactionId
+        const updatedThought = await Thought.findByIdAndUpdate(
+            thoughtId,
+            { $pull: { reactions: { _id: reactionId } } },
             { new: true }
         );
-    
-        if (!thought) {
-            return res.status(404).json({ message: 'No thought with that ID' });
+
+        if (!updatedThought) {
+            return res.status(404).json({ message: 'No thought or reaction with that ID' });
         }
-    
-        res.json(reaction);
-        } catch (err) {
+
+        res.json({ message: 'Reaction deleted!' });
+    } catch (err) {
+        console.error(err);
         res.status(500).json({ error: 'Server error' });
-        }
     }
+  }
+
 }
