@@ -87,9 +87,10 @@ module.exports = {
       }
 
       // Remove the thought _id from the associated user's thoughts array
-      await User.findByIdAndUpdate(
-        thought.username,
-        { $pull: { thoughts: req.params.thoughtId } }
+        await User.findOneAndUpdate(
+        { username: thought.username },
+        { $pull: { thoughts: req.params.thoughtId } },
+        { new: true }
       );
 
       res.json({ message: 'Thought deleted!' });
