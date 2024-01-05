@@ -1,5 +1,6 @@
 const Thought = require('../models/Thought');
 const User = require('../models/User');
+const mongoose = require('mongoose');
 
 module.exports = {
   // GET all thoughts
@@ -32,18 +33,31 @@ module.exports = {
     try {
       const { thoughtText, username } = req.body;
   
+      if (!thoughtText || !username) {
+        return res.status(400).json({ error: 'Invalid request data. Make sure you provide both thoughtText and username.' });
+      }
+  
       // Create a new thought
       const thought = await Thought.create({ thoughtText, username });
   
+      if (!thought) {
+        return res.status(500).json({ error: 'Failed to create thought' });
+      }
+  
       // Update the associated user's thoughts array
-      await User.findByIdAndUpdate(
-        thought.username,
+      const updatedUser = await User.findOneAndUpdate(
+        { username }, // Use the username as a filter to find the user
         { $push: { thoughts: thought._id } },
         { new: true }
       );
   
+      if (!updatedUser) {
+        return res.status(500).json({ error: 'Failed to update user' });
+      }
+  
       res.json(thought);
     } catch (err) {
+      console.error(err);
       res.status(500).json({ error: 'Server error' });
     }
   },
