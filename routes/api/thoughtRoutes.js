@@ -8,7 +8,7 @@ const {
     deleteThought
 } = require('../../controllers/thoughtController');
 
-
+console.log('Thought routes initialised');
 
 router.route('/').get(getThoughts).post(createThought);
 

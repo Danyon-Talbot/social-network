@@ -32,7 +32,7 @@ const userSchema = new mongoose.Schema({
     ],
 });
 
-userSchema.virtual('friendcount').get(function () {
+userSchema.virtual('friendCount').get(function () {
     return this.friends.length;
 });
 
